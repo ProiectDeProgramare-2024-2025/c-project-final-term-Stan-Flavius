@@ -10,14 +10,12 @@
 #define NOTES_DIR "notes"
 #define MAX_PATH_LENGTH 260
 
-// Structure to store a note
 typedef struct {
     char title[MAX_TITLE_LENGTH];
     char content[MAX_CONTENT_LENGTH];
     char filename[MAX_PATH_LENGTH];
 } Note;
 
-// Global array to store notes
 Note notes[MAX_NOTES];
 int noteCount = 0;
 
@@ -25,7 +23,6 @@ void clearScreen() {
     system("cls");
 }
 
-//headers
 void mainMenuHeader() {
     printf("=== NOTES APPLICATION ===\n");
     printf("-------------------------\n");
@@ -57,27 +54,23 @@ void deleteNoteHeader() {
     printf("-------------------\n");
 }
 
-// Check if directory exists
 int directoryExists(const char* path) {
     DWORD attributes = GetFileAttributes(path);
     return (attributes != INVALID_FILE_ATTRIBUTES &&
         (attributes & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-// Create a sample note file
 void createSampleNote(const char* title, const char* content) {
     char filename[MAX_PATH_LENGTH];
     char filePath[MAX_PATH_LENGTH];
 
-    
     strcpy(filename, title);
 
-    
     for (int i = 0; i < strlen(filename); i++) {
         if (filename[i] == ' ') {
             filename[i] = '_';
         }
-    } 
+    }
 
     sprintf(filePath, "%s\\%s.txt", NOTES_DIR, filename);
 
@@ -110,7 +103,6 @@ void initializeNotesDirectory() {
     }
 }
 
-// Load notes from individual files in the notes directory
 void loadNotesFromFiles() {
     noteCount = 0;
 
@@ -165,11 +157,118 @@ void loadNotesFromFiles() {
     FindClose(hFind);
 }
 
-// usability functions
 void addNote() {
     clearScreen();
     addNoteHeader();
-    printf("Not implemented yet. Please press enter to continue...");
+
+    char title[MAX_TITLE_LENGTH];
+    char content[MAX_CONTENT_LENGTH];
+    char filename[MAX_PATH_LENGTH];
+    char filepath[MAX_PATH_LENGTH];
+
+    printf("Enter note title (max %d characters): ", MAX_TITLE_LENGTH - 1);
+    fgets(title, MAX_TITLE_LENGTH, stdin);
+
+    size_t len = strlen(title);
+    if (len > 0 && title[len - 1] == '\n') {
+        title[len - 1] = '\0';
+        len--;
+    }
+
+    if (len == 0) {
+        printf("Title cannot be empty. Press enter to return to main menu...");
+        getchar();
+        clearScreen();
+        return;
+    }
+
+    int existingNoteIndex = -1;
+    for (int i = 0; i < noteCount; i++) {
+        if (strcmp(notes[i].title, title) == 0) {
+            existingNoteIndex = i;
+            break;
+        }
+    }
+
+    if (existingNoteIndex != -1) {
+        printf("\nA note with the title \"%s\" already exists.\n", title);
+        printf("Current content:\n%s\n", notes[existingNoteIndex].content);
+        printf("\nDo you want to edit this note? (y/n): ");
+
+        char choice;
+        scanf("%c", &choice);
+        getchar();
+
+        if (choice != 'y' && choice != 'Y') {
+            printf("Operation cancelled. Press enter to return to main menu...");
+            getchar();
+            clearScreen();
+            return;
+        }
+
+        strcpy(filepath, notes[existingNoteIndex].filename);
+    }
+    else {
+        strcpy(filename, title);
+        for (int i = 0; i < strlen(filename); i++) {
+            if (filename[i] == ' ') {
+                filename[i] = '_';
+            }
+        }
+
+        sprintf(filepath, "%s\\%s.txt", NOTES_DIR, filename);
+    }
+
+    printf("\nEnter note content (max %d characters):\n", MAX_CONTENT_LENGTH - 1);
+    printf("(Press Enter twice to finish)\n");
+
+    content[0] = '\0';
+    char line[MAX_CONTENT_LENGTH];
+    int contentLen = 0;
+
+    while (1) {
+        fgets(line, MAX_CONTENT_LENGTH - contentLen, stdin);
+
+        if (line[0] == '\n') {
+            break;
+        }
+
+        strcat(content, line);
+        contentLen = strlen(content);
+
+        if (contentLen >= MAX_CONTENT_LENGTH - 3) {
+            break;
+        }
+    }
+
+    FILE* file = fopen(filepath, "w");
+    if (file == NULL) {
+        printf("Error: Unable to create/update note file.\n");
+        printf("Press enter to continue...");
+        getchar();
+        clearScreen();
+        return;
+    }
+
+    fprintf(file, "%s", content);
+    fclose(file);
+
+    if (existingNoteIndex != -1) {
+        strcpy(notes[existingNoteIndex].content, content);
+        printf("\nNote updated successfully!\n");
+    }
+    else if (noteCount < MAX_NOTES) {
+        strcpy(notes[noteCount].title, title);
+        strcpy(notes[noteCount].content, content);
+        strcpy(notes[noteCount].filename, filepath);
+        noteCount++;
+        printf("\nNote saved successfully!\n");
+    }
+    else {
+        printf("\nNote saved to file but not loaded in memory (maximum notes reached).\n");
+    }
+
+    printf("Press enter to continue...");
     getchar();
     clearScreen();
 }
@@ -214,7 +313,6 @@ void deleteNote() {
     clearScreen();
 }
 
-//menu options
 void menu(int option) {
     switch (option) {
     case 1:

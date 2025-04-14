@@ -1,4 +1,5 @@
 ﻿  PP_project.c
+C:\Projects\PP_project\PP_project.c(237,22): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
   PP_project.vcxproj -> C:\Projects\PP_project\x64\Debug\PP_project.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.
